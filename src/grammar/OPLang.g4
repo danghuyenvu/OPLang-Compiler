@@ -24,10 +24,490 @@ options{
 	language=Python3;
 }
 
-program: EOF; // write for program rule here using vardecl and funcdecl
+//                                           Comments
+LINECOMMENT: '#'~[\n\r]* -> skip;
+BLOCKCOMMENT: '/*'(~[*]|'*'~[/])*'*/' -> skip;
+UNCLOSEDBLOCKCOMMENT: '/*'(~[*]|'*'~[/])* ->skip;
 
-WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs 
+//                                           Keywords
+BOOLEAN: 'boolean';
+BREAK: 'break';
+CLASS: 'class';
+CONTINUE: 'continue';
+DO: 'do';
+ELSE: 'else';
+EXTENDS: 'extends';
+FLOAT: 'float';
+IF: 'if';
+INT: 'int';
+NEW: 'new';
+STRING: 'string';
+THEN: 'then';
+FOR: 'for';
+RETURN: 'return';
+TRUE: 'true';
+FALSE: 'false';
+VOID: 'void';
+NIL: 'nil';
+THIS: 'this';
+FINAL: 'final';
+STATIC: 'static';
+TO: 'to';
+DOWNTO: 'downto';
+
+
+
+
+
+//                                           Operators
+ADDOP: '+';
+SUBOP: '-';
+MULOP: '*';
+FLOATDIVOP: '/';
+INTDIVOP: '\\';            //all operand in integer required or typemissmatch
+MODULUS: '%';             //all operand in integer required or typemissmatch
+NOTEQ: '!=';
+EQ: '==';
+LESSTHAN: '<';
+GREATERTHAN: '>';
+LESSEQ: '<=';
+GREATEREQ: '>=';
+LOGICOR: '||';
+LOGICAND: '&&';
+LOGICNOT: '!';
+CONCAT: '^';
+ASSIGNING: ':=';
+
+//                                           Separators
+LSQUAREBRACKET: '[';
+RSQUAREBRACKET: ']';
+LPAREN: '{';
+RPAREN: '}';
+LBRACKET: '(';
+RBRACKET: ')';
+SEMICOLON: ';';
+COLON: ':';
+DOT: '.';
+COMMA: ',';
+
+//                                           Special Characters
+REFERENCE: '&';
+DESTRUCT: '~';
+
+
+//                                           Identifiers
+IDENTIFIERS: [a-zA-Z'_'][a-zA-Z0-9'_']*;
+
+//                                           Literals
+fragment Digit: [0-9];
+INTLIT: Digit+;
+
+FLOATLIT: Digit+ '.' Digit*([eE][+-]?Digit+)? | Digit+[eE][+-]?Digit+;
+
+fragment ESC: '\\'[bfrnt"\\];
+fragment ASCII: [\u0000-\u0009\u000B-\u0021\u0023-\u005B\u005D-\u007F]; //excluding ["] and [\]
+
+ILLEGAL_ESCAPE: '"'(ESC|ASCII)*'\\'~[bfrnt"\\]{
+    raise IllegalEscape(self.text[1:])
+};
+
+STRINGLIT: '"'(ESC|ASCII)*'"'{self.text = self.text[1:-1]};
+
+
+WS : [ \t\r\n\f]+ -> skip ; // skip spaces, tabs 
+
+UNCLOSE_STRING:'"'(ESC|ASCII)*{
+    self.text = self.text[1:]
+    raise UncloseString(self.text)
+};
 
 ERROR_CHAR: .;
-ILLEGAL_ESCAPE:.;
-UNCLOSE_STRING:.;
+
+
+
+//                                           Context-free Grammar
+program: classdecllist EOF; // write for program rule here using vardecl and funcdecl
+
+classdecllist
+    : classdecl classdecllist 
+    | classdecl
+    ;
+
+classdecl
+    : CLASS IDENTIFIERS memberblock
+    | CLASS IDENTIFIERS EXTENDS IDENTIFIERS memberblock
+    ;
+
+memberblock
+    : LPAREN memberlist RPAREN
+    ;
+
+memberlist
+    : classmember membertail
+    |
+    ;
+
+membertail
+    : classmember membertail
+    | 
+    ;
+
+classmember
+    : attributedecl
+    | methoddecl
+    | constructor
+    | destructor
+    ;
+
+attributedecl
+    : memberspec memberspec vartype varlist SEMICOLON
+    | referencememdecl
+    ;
+
+memberspec
+    : STATIC
+    | FINAL
+    |
+    ;
+
+vartype
+    : BOOLEAN
+    | FLOAT
+    | INT
+    | STRING
+    | IDENTIFIERS //for class type
+    | arraytype
+    ;
+
+arraytype
+    : elementtype LSQUAREBRACKET INTLIT RSQUAREBRACKET
+    ;
+
+elementtype
+    : INT
+    | BOOLEAN
+    | FLOAT
+    | STRING
+    ;
+
+varlist
+    : varunit vartail
+    | varunit
+    ;
+
+vartail
+    : COMMA varunit vartail
+    | 
+    ;
+
+varunit
+    : assign
+    | IDENTIFIERS 
+    ;
+
+assign
+    : IDENTIFIERS ASSIGNING expression
+    ;
+
+referencememdecl
+    : memberspec memberspec vartype REFERENCE varlist ASSIGNING expression SEMICOLON
+    ;
+
+methoddecl
+    : memberspec returntype IDENTIFIERS paramlistblock blockstatement
+    ;
+
+returntype
+    : INT REFERENCE 
+    | FLOAT REFERENCE
+    | BOOLEAN REFERENCE
+    | STRING REFERENCE
+    | IDENTIFIERS REFERENCE
+    | INT
+    | FLOAT
+    | BOOLEAN
+    | STRING
+    | VOID
+    | IDENTIFIERS //for class type
+    ;
+
+paramlistblock
+    : LBRACKET paramlist RBRACKET
+    ;
+
+paramlist
+    : parameter paramtail
+    | 
+    ;
+
+paramtail
+    : SEMICOLON parameter paramtail
+    | 
+    ;
+
+parameter
+    : paramtype varlist
+    ;
+
+paramtype
+    : vartype REFERENCE // for reference type
+    | vartype
+    ;
+
+constructor
+    : defaultconstructor
+    | copyconstructor
+    | userdefinedconstructor
+    ;
+
+defaultconstructor
+    : IDENTIFIERS LBRACKET RBRACKET blockstatement
+    ;
+
+copyconstructor
+    : IDENTIFIERS LBRACKET IDENTIFIERS RBRACKET blockstatement
+    ;
+
+userdefinedconstructor
+    : IDENTIFIERS paramlistblock blockstatement
+    ;
+
+destructor
+    : DESTRUCT IDENTIFIERS LBRACKET RBRACKET blockstatement
+    ;
+
+expression : orexpression;
+
+orexpression
+    : orexpression LOGICOR andexpression
+    | andexpression
+    ;
+
+andexpression
+    : andexpression LOGICAND relationalexpression
+    | relationalexpression
+    ;
+
+relationalexpression
+    : arithmeticexpression relationaloperators arithmeticexpression
+    | arithmeticexpression
+    ;
+
+relationaloperators
+    : EQ
+    | NOTEQ
+    | GREATERTHAN
+    | LESSTHAN
+    | GREATEREQ
+    | LESSEQ
+    ;
+
+arithmeticexpression
+    : arithmeticexpression ADDOP terms
+    | arithmeticexpression SUBOP terms
+    | terms
+    ;
+
+terms
+    : terms termoperators unaryfactor
+    | unaryfactor
+    ;
+
+termoperators
+    : MULOP
+    | FLOATDIVOP
+    | INTDIVOP
+    | MODULUS
+    | CONCAT
+    ;
+
+unaryfactor
+    : ADDOP unaryfactor
+    | SUBOP unaryfactor
+    | LOGICNOT unaryfactor
+    | primaryfactor indexing
+    | unaryfactor memaccess
+    | unaryfactor instmethodinvoke
+    | objcreate
+    | primaryfactor
+    ;
+
+primaryfactor
+    : LBRACKET expression RBRACKET
+    | INTLIT
+    | FLOATLIT
+    | STRINGLIT
+    | arraylit
+    | TRUE
+    | FALSE
+    | IDENTIFIERS
+    | staticmemaccess
+    | thisaccess
+    | thismethodinvoke
+    | staticmethodinvoke
+    ;
+
+indexing
+    : LSQUAREBRACKET expression RSQUAREBRACKET
+    ;
+
+memaccess
+    : DOT IDENTIFIERS
+    ;
+
+thisaccess
+    : THIS DOT IDENTIFIERS
+    ;
+
+staticmemaccess
+    : IDENTIFIERS DOT IDENTIFIERS
+    ;
+
+expressionlist
+    : expression expressiontail 
+    |
+    ;
+
+expressiontail
+    : COMMA expression expressiontail 
+    | 
+    ;
+
+instmethodinvoke
+    : DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
+    ;
+
+thismethodinvoke
+    : THIS DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
+    ;
+
+staticmethodinvoke
+    : IDENTIFIERS DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
+    ;
+
+objcreate
+    : NEW IDENTIFIERS LBRACKET expressionlist RBRACKET
+    ;
+
+blockstatement
+    : LPAREN blockstatementbody RPAREN
+    ;
+
+blockstatementbody
+    : vardecllist statementlist
+    ;
+
+vardecllist
+    : vardecl vardecllist
+    | 
+    ;
+
+vardecl
+    : varspec vartype varlist SEMICOLON
+    | referencedecl
+    ;
+
+referencedecl
+    : vartype REFERENCE varlist ASSIGNING expression SEMICOLON
+    ;
+
+varspec
+    : FINAL
+    | 
+    ;
+
+statementlist
+    : statement statementlist
+    | 
+    ;
+
+reassign
+    : lhs ASSIGNING expression
+    ;
+
+lhs
+    : lhs memaccess
+    | idtail indexing
+    | idtail
+    ;
+
+idtail
+    : IDENTIFIERS
+    | staticmemaccess
+    | thisaccess
+    ;
+
+statement
+    : reassign SEMICOLON
+    | funcdecl
+    | expression SEMICOLON
+    | blockstatement
+    | ifstatement
+    | forstatement
+    | breakstatement
+    | continuestatement
+    | returnstatement
+    ;
+
+funcdecl
+    : returntype IDENTIFIERS paramlistblock blockstatement
+    ;
+
+ifstatement
+    : IF expression THEN blockstatement iftail
+    | IF expression THEN statement iftail
+    ;
+
+iftail
+    : ELSE blockstatement
+    | ELSE statement
+    | 
+    ;
+
+forstatement
+    : FOR reassign fordirection expression DO blockstatement
+    | FOR reassign fordirection expression DO statement
+    ;
+
+fordirection
+    : TO
+    | DOWNTO
+    ;
+
+breakstatement
+    : BREAK SEMICOLON
+    ;
+
+continuestatement
+    : CONTINUE SEMICOLON
+    ;
+
+returnstatement
+    : RETURN expression SEMICOLON
+    ;
+
+arraylit                                       //Array literal
+    : LPAREN literallist RPAREN
+    ;
+
+literallist
+    : anyliteral literallisttail
+    | anyliteral
+    ;
+
+literallisttail
+    : COMMA anyliteral literallisttail
+    |
+    ;
+
+anyliteral
+    : INTLIT
+    | STRINGLIT
+    | FLOATLIT
+    | boollit
+    ;
+
+boollit
+    : TRUE
+    | FALSE
+    ;
