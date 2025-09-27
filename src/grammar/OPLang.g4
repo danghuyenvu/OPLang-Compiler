@@ -409,7 +409,7 @@ vardecl
     ;
 
 referencedecl
-    : vartype REFERENCE varlist ASSIGNING expression SEMICOLON
+    : varspec vartype REFERENCE varlist ASSIGNING expression SEMICOLON
     ;
 
 varspec
