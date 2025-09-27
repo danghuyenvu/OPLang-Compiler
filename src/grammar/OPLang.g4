@@ -460,7 +460,6 @@ idtail
 
 statement
     : reassign SEMICOLON
-    | funcdecl
     | expression SEMICOLON
     | blockstatement
     | ifstatement
@@ -468,10 +467,6 @@ statement
     | breakstatement
     | continuestatement
     | returnstatement
-    ;
-
-funcdecl
-    : returntype IDENTIFIERS paramlistblock blockstatement
     ;
 
 ifstatement

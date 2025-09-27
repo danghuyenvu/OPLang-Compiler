@@ -911,7 +911,7 @@ def test_068():
             int a := 10;
 		}
     }"""
-	expected = "Error on line 4 col 18: :="
+	expected = "Error on line 4 col 12: int"
 	assert Parser(source).parse() == expected
 	
 def test_069():
