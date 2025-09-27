@@ -160,7 +160,7 @@ classmember
     ;
 
 attributedecl
-    : memberspec memberspec vartype varlist SEMICOLON
+    : memberspec memberspec vartype attrlist SEMICOLON
     | referencememdecl
     ;
 
@@ -190,17 +190,17 @@ elementtype
     | STRING
     ;
 
-varlist
-    : varunit vartail
-    | varunit
+attrlist
+    : attrunit attrtail
+    | attrunit
     ;
 
-vartail
-    : COMMA varunit vartail
+attrtail
+    : COMMA attrunit attrtail
     | 
     ;
 
-varunit
+attrunit
     : assign
     | IDENTIFIERS 
     ;
@@ -210,7 +210,7 @@ assign
     ;
 
 referencememdecl
-    : memberspec memberspec vartype REFERENCE varlist ASSIGNING expression SEMICOLON
+    : memberspec memberspec vartype REFERENCE attrlist ASSIGNING expression SEMICOLON
     ;
 
 methoddecl
@@ -415,6 +415,25 @@ referencedecl
 varspec
     : FINAL
     | 
+    ;
+
+varlist
+    : varunit vartail
+    | varunit
+    ;
+
+vartail
+    : COMMA varunit vartail
+    | 
+    ;
+
+varunit
+    : assignvar
+    | IDENTIFIERS 
+    ;
+
+assignvar
+    : IDENTIFIERS ASSIGNING expression
     ;
 
 statementlist
