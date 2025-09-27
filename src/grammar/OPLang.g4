@@ -229,6 +229,7 @@ returntype
     | STRING
     | VOID
     | IDENTIFIERS //for class type
+    | arraytype
     ;
 
 paramlistblock

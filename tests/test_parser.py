@@ -103,7 +103,7 @@ def test_010():
             obj := new Test();
         }
     }"""
-    expected = "Error on line 5 col 20: ;"
+    expected = "success"
     assert Parser(source).parse() == expected
 
 
@@ -1376,4 +1376,12 @@ def test_100():
 def test_101():
     source = """\""""
     expected = "Unclosed String: "
+    assert Parser(source).parse() == expected
+	
+def test_102():
+    source = """class Program {
+        static void main(){}
+		int[5] haha(){}
+	}"""
+    expected = "success"
     assert Parser(source).parse() == expected
