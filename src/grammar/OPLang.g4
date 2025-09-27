@@ -184,10 +184,11 @@ arraytype
     ;
 
 elementtype
-    : INT
-    | BOOLEAN
-    | FLOAT
-    | STRING
+    : INT REFERENCE?
+    | BOOLEAN REFERENCE?
+    | FLOAT REFERENCE?
+    | STRING REFERENCE?
+    | IDENTIFIERS REFERENCE?
     ;
 
 attrlist
