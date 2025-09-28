@@ -330,8 +330,15 @@ unaryfactor
     | objcreate
     | staticmemaccess
     | staticmethodinvoke
-    | lhs
+    | postfixexp indexing
+    | postfixexp
     | primaryfactor
+    ;
+
+postfixexp
+    : postfixexp lhspostfix
+    | IDENTIFIERS
+    | THIS
     ;
 
 primaryfactor
@@ -342,7 +349,6 @@ primaryfactor
     | arraylit
     | TRUE
     | FALSE
-    | IDENTIFIERS
     ;
 
 indexing
@@ -434,19 +440,15 @@ reassign
     : lhs ASSIGNING expression
     ;
 
-lhsprefix
-    : IDENTIFIERS
-    | THIS
-    ;
-
 lhspostfix
     : memaccess
     | instmethodinvoke
+    | indexing
     ;
 
 lhs
-    : lhsprefix lhspostfix*
-    | lhsprefix indexing
+    : postfixexp
+    | IDENTIFIERS
     ;
 
 statement

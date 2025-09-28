@@ -647,7 +647,7 @@ def test_045():
             a[5][9] := 8;
 		}
     }"""
-	expected = "Error on line 3 col 16: ["
+	expected = "success"
 	assert Parser(source).parse() == expected
 	
 def test_046():
