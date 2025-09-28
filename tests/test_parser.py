@@ -829,7 +829,7 @@ def test_060():
             3[2] := 125;
             }
         }"""
-	expected = "Error on line 3 col 17: :="
+	expected = "Error on line 3 col 13: ["
 	assert Parser(source).parse() == expected
 	
 def test_061():
@@ -1313,7 +1313,7 @@ def test_095():
             int x := 1.2.3;
         }
     }"""
-    expected = "Error on line 3 col 25: 3"
+    expected = "Error on line 3 col 24: ."
     assert Parser(source).parse() == expected
 
 def test_096():

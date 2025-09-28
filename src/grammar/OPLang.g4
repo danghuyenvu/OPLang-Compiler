@@ -327,10 +327,10 @@ unaryfactor
     : ADDOP unaryfactor
     | SUBOP unaryfactor
     | LOGICNOT unaryfactor
-    | primaryfactor indexing
-    | unaryfactor memaccess
-    | unaryfactor instmethodinvoke
     | objcreate
+    | staticmemaccess
+    | staticmethodinvoke
+    | lhs
     | primaryfactor
     ;
 
@@ -343,10 +343,6 @@ primaryfactor
     | TRUE
     | FALSE
     | IDENTIFIERS
-    | staticmemaccess
-    | thisaccess
-    | thismethodinvoke
-    | staticmethodinvoke
     ;
 
 indexing
@@ -355,10 +351,6 @@ indexing
 
 memaccess
     : DOT IDENTIFIERS
-    ;
-
-thisaccess
-    : THIS DOT IDENTIFIERS
     ;
 
 staticmemaccess
@@ -377,10 +369,6 @@ expressiontail
 
 instmethodinvoke
     : DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
-    ;
-
-thismethodinvoke
-    : THIS DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
     ;
 
 staticmethodinvoke
@@ -446,16 +434,19 @@ reassign
     : lhs ASSIGNING expression
     ;
 
-lhs
-    : lhs memaccess
-    | idtail indexing
-    | idtail
+lhsprefix
+    : IDENTIFIERS
+    | THIS
     ;
 
-idtail
-    : IDENTIFIERS
-    | staticmemaccess
-    | thisaccess
+lhspostfix
+    : memaccess
+    | instmethodinvoke
+    ;
+
+lhs
+    : lhsprefix lhspostfix*
+    | lhsprefix indexing
     ;
 
 statement
@@ -481,8 +472,12 @@ iftail
     ;
 
 forstatement
-    : FOR reassign fordirection expression DO blockstatement
-    | FOR reassign fordirection expression DO statement
+    : FOR scalar ASSIGNING expression fordirection expression DO blockstatement
+    | FOR scalar ASSIGNING expression fordirection expression DO statement
+    ;
+
+scalar
+    : IDENTIFIERS
     ;
 
 fordirection
