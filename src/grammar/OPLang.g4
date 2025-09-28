@@ -330,7 +330,6 @@ unaryfactor
     | objcreate
     | staticmemaccess
     | staticmethodinvoke
-    | postfixexp indexing
     | postfixexp
     | primaryfactor
     ;
