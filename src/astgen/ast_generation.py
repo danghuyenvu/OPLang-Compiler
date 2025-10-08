@@ -330,8 +330,8 @@ class ASTGeneration(OPLangVisitor):
     def visitLhspostfix(self, ctx): #returns an object of type PostfixOp
         if (ctx.memaccess()):
             return MemberAccess(self.visit(ctx.memaccess()))
-        elif (ctx.instmethodinvoke()):
-            return self.visit(ctx.instmethodinvoke())
+        elif (ctx.methodinvoke()):
+            return self.visit(ctx.methodinvoke())
         else:
             return ArrayAccess(self.visit(ctx.indexing()))
         
@@ -340,7 +340,7 @@ class ASTGeneration(OPLangVisitor):
         return ctx.IDENTIFIERS().getText()
     
 
-    def visitInstmethodinvoke(self, ctx): #returns object of MethodCall type
+    def visitMethodinvoke(self, ctx): #returns object of MethodCall type
         return MethodCall(ctx.IDENTIFIERS().getText(), self.visit(ctx.expressionlist()))
     
 
@@ -457,24 +457,12 @@ class ASTGeneration(OPLangVisitor):
             return ThisExpression()
         elif (ctx.objcreate()):
             return self.visit(ctx.objcreate())
-        elif (ctx.staticmemaccess()):
-            return self.visit(ctx.staticmemaccess())
-        elif (ctx.staticmethodinvoke()):
-            return self.visit(ctx.staticmethodinvoke())
         else:
             return ParenthesizedExpression(self.visit(ctx.expression()))
         
 
     def visitObjcreate(self, ctx):
         return ObjectCreation(ctx.IDENTIFIERS().getText(), self.visit(ctx.expressionlist()))
-
-
-    def visitStaticmemaccess(self, ctx):
-        return StaticMemberAccess(ctx.IDENTIFIERS(0).getText(), ctx.IDENTIFIERS(1).getText())
-
-
-    def visitStaticmethodinvoke(self, ctx):
-        return StaticMethodInvocation(ctx.IDENTIFIERS(0).getText(), ctx.IDENTIFIERS(1).getText(), self.visit(ctx.expressionlist()))
 
 
     def visitPrimaryfactor(self, ctx):

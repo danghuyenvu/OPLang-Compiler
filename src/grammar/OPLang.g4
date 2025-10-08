@@ -346,8 +346,6 @@ postfixexp
 
 unaryfactor
     : objcreate
-    | staticmemaccess
-    | staticmethodinvoke
     | LBRACKET expression RBRACKET
     | IDENTIFIERS
     | THIS
@@ -375,10 +373,6 @@ memaccess
     : DOT IDENTIFIERS
     ;
 
-staticmemaccess
-    : IDENTIFIERS DOT IDENTIFIERS
-    ;
-
 expressionlist
     : expression expressiontail 
     |
@@ -389,12 +383,8 @@ expressiontail
     | 
     ;
 
-instmethodinvoke
+methodinvoke
     : DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
-    ;
-
-staticmethodinvoke
-    : IDENTIFIERS DOT IDENTIFIERS LBRACKET expressionlist RBRACKET
     ;
 
 objcreate
@@ -458,7 +448,7 @@ reassign
 
 lhspostfix
     : memaccess
-    | instmethodinvoke
+    | methodinvoke
     | indexing
     ;
 
