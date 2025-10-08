@@ -77,7 +77,7 @@ def test_007():
             }
         }
     }"""
-    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(vars=[VariableDecl(PrimitiveType(int), [Variable(sum = IntLiteral(0))])], stmts=[ForStatement(for i := IntLiteral(1) to IntLiteral(10) do BlockStatement(stmts=[AssignmentStatement(IdLHS(sum) := BinaryOp(Identifier(sum), +, Identifier(i)))]))]))])])"
+    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[ForStatement(for i := IntLiteral(1) to IntLiteral(10) do BlockStatement(stmts=[MethodInvocationStatement(StaticMethodInvocation(io.writeIntLn(Identifier(i))))]))]))])])"
     assert str(ASTGenerator(source).generate()) == expected
 
 def test_008():
@@ -125,4 +125,38 @@ def test_011():
         }
     }"""
     expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(vars=[VariableDecl(PrimitiveType(int), [Variable(x = IntLiteral(0))])], stmts=[]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
+    expected = "Program([ClassDecl(TestClass, [DestructorDecl(~TestClass(), BlockStatement(stmts=[MethodInvocationStatement(StaticMethodInvocation(io.writeStrLn(StringLiteral('Object destroyed'))))]))])])"
+    assert str(ASTGenerator(source).generate()) == expected
+
+
+def test_012():
+    """Test basic class declaration AST generation"""
+    source = """class TestClass {
+        int& x := y;
+    }"""
+    expected = "Program([ClassDecl(TestClass, [AttributeDecl(ReferenceType(PrimitiveType(int) &), [Attribute(x)])])])"
+    # Just check that it doesn't return an error
+    assert str(ASTGenerator(source).generate()) == expected
+
+def test_013():
+    """Test basic class declaration AST generation"""
+    source = """class TestClass {
+        void main(){
+            x := 5 + 6;
+        }
+    }"""
+    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[AssignmentStatement(IdLHS(x) := BinaryOp(IntLiteral(5), +, IntLiteral(6)))]))])])"
+    # Just check that it doesn't return an error
+    assert str(ASTGenerator(source).generate()) == expected
+
+def test_014():
+    """Test if-else statement AST generation"""
+    source = """class TestClass {
+        void main() {
+            if x > 0 then {
+            }
+        }
+    }"""
+    expected = "Program([ClassDecl(TestClass, [MethodDecl(PrimitiveType(void) main([]), BlockStatement(stmts=[IfStatement(if BinaryOp(Identifier(x), >, IntLiteral(0)) then BlockStatement(stmts=[]))]))])])"
     assert str(ASTGenerator(source).generate()) == expected

@@ -1385,3 +1385,28 @@ def test_102():
 	}"""
     expected = "success"
     assert Parser(source).parse() == expected
+	
+def test_103():
+    source = """class TestClass {
+        x := 5 + 6;
+    }"""
+    expected = "Error on line 2 col 10: :="
+    assert Parser(source).parse() == expected
+	
+def test_104():
+    source = """class TestClass {
+        static void main(){
+            a[5] := this[6];
+		}
+    }"""
+    expected = "Error on line 2 col 10: :="
+    assert Parser(source).parse() == expected
+	
+def test_105():
+    source = """class TestClass {
+        static void main(){
+            (a + b).method() := 10;
+		}
+    }"""
+    expected = "Error on line 2 col 10: :="
+    assert Parser(source).parse() == expected

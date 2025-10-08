@@ -248,7 +248,16 @@ paramtail
     ;
 
 parameter
-    : paramtype varlist
+    : paramtype idlist
+    ;
+
+idlist
+    : IDENTIFIERS idtail
+    ;
+
+idtail
+    : COMMA IDENTIFIERS idtail
+    |
     ;
 
 paramtype
@@ -311,8 +320,8 @@ arithmeticexpression
     ;
 
 terms
-    : terms termoperators unaryfactor
-    | unaryfactor
+    : terms termoperators factor
+    | factor
     ;
 
 termoperators
@@ -323,26 +332,34 @@ termoperators
     | CONCAT
     ;
 
-unaryfactor
-    : ADDOP unaryfactor
-    | SUBOP unaryfactor
-    | LOGICNOT unaryfactor
-    | objcreate
-    | staticmemaccess
-    | staticmethodinvoke
+factor
+    : ADDOP factor
+    | SUBOP factor
+    | LOGICNOT factor
     | postfixexp
     | primaryfactor
     ;
 
 postfixexp
-    : postfixexp lhspostfix
+    : unaryfactor postfixlist
+    ;
+
+unaryfactor
+    : objcreate
+    | staticmemaccess
+    | staticmethodinvoke
+    | LBRACKET expression RBRACKET
     | IDENTIFIERS
     | THIS
     ;
 
+postfixlist
+    : lhspostfix postfixlist
+    | 
+    ;
+
 primaryfactor
-    : LBRACKET expression RBRACKET
-    | INTLIT
+    : INTLIT
     | FLOATLIT
     | STRINGLIT
     | arraylit
@@ -446,8 +463,8 @@ lhspostfix
     ;
 
 lhs
-    : postfixexp
-    | IDENTIFIERS
+    : IDENTIFIERS
+    | postfixexp
     ;
 
 statement
