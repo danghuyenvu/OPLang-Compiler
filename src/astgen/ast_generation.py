@@ -67,7 +67,13 @@ class ASTGeneration(OPLangVisitor):
         memspecs = [self.visit(x) for x in ctx.memberspec()]
         is_static = "static" in memspecs
         is_final = "final" in memspecs
-        return AttributeDecl(is_static, is_final, self.visit(ctx.vartype()), self.visit(ctx.attrlist()))
+        attr_type = self.visit(ctx.vartype())
+        attr_list = self.visit(ctx.attrlist())
+        if (isinstance(attr_type, ClassType)):
+            for x in attr_list:
+                if x.init_value == None:
+                    x.init_value = NilLiteral()
+        return AttributeDecl(is_static, is_final, attr_type, attr_list)
     
 
     def visitReferencememdecl(self, ctx): # this returns an object of type AttributeDecl but for reference declaration
@@ -243,7 +249,13 @@ class ASTGeneration(OPLangVisitor):
     def visitVardecl(self, ctx): #returns a VariableDecl object
         if (ctx.referencedecl()):
             return self.visit(ctx.referencedecl())
-        return VariableDecl(self.visit(ctx.varspec()), self.visit(ctx.vartype()), self.visit(ctx.varlist()))
+        var_type = self.visit(ctx.vartype())
+        var_list = self.visit(ctx.varlist())
+        if (isinstance(var_type, ClassType)):
+            for x in var_list:
+                if x.init_value == None:
+                    x.init_value = NilLiteral() 
+        return VariableDecl(self.visit(ctx.varspec()), var_type, var_list)
 
 
     def visitVarspec(self, ctx):
@@ -284,23 +296,24 @@ class ASTGeneration(OPLangVisitor):
     def visitStatement(self, ctx): #returns a Statement object
         if (ctx.expression()):
             return MethodInvocationStatement(self.visit(ctx.expression()))
-        return self.visit(ctx.getChild(0))
-        if (ctx.reassign()):
-            return self.visit(ctx.reassign())
-        elif (ctx.expression()):
-            pass
-        elif (ctx.blockstatement):
-            return self.visit(ctx.blockstatement())
-        elif (ctx.ifstatement()):
-            return self.visit(ctx.ifstatement())
-        elif (ctx.forstatement()):
-            return self.visit(ctx.forstatement())
-        elif (ctx.breakstatement()):
-            return self.visit(ctx.breakstatement())
-        elif (ctx.returnstatement()):
-            return self.visit(ctx.returnstatement())
-        else:
-            return self.visit(ctx.continuestatement())
+        if ctx.getChild(0):
+            return self.visit(ctx.getChild(0))
+        # if (ctx.reassign()):
+        #     return self.visit(ctx.reassign())
+        # elif (ctx.expression()):
+        #     pass
+        # elif (ctx.blockstatement):
+        #     return self.visit(ctx.blockstatement())
+        # elif (ctx.ifstatement()):
+        #     return self.visit(ctx.ifstatement())
+        # elif (ctx.forstatement()):
+        #     return self.visit(ctx.forstatement())
+        # elif (ctx.breakstatement()):
+        #     return self.visit(ctx.breakstatement())
+        # elif (ctx.returnstatement()):
+        #     return self.visit(ctx.returnstatement())
+        # else:
+        #     return self.visit(ctx.continuestatement())
         
 
     def visitReassign(self, ctx): #return an object of type AssignmentStatement
@@ -475,7 +488,7 @@ class ASTGeneration(OPLangVisitor):
         elif (ctx.STRINGLIT()):
             return StringLiteral(ctx.STRINGLIT().getText())
         else:
-            return BoolLiteral(bool(ctx.getChild(0).getText()))
+            return BoolLiteral(True if ctx.TRUE() else False)
 
 
     def visitArraylit(self, ctx):
@@ -502,4 +515,4 @@ class ASTGeneration(OPLangVisitor):
         
     
     def visitBoollit(self, ctx):
-        return BoolLiteral(bool(ctx.getChild(0).getText()))
+        return BoolLiteral(True if ctx.TRUE() else False)

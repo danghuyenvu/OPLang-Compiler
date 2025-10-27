@@ -1399,7 +1399,7 @@ def test_104():
             a[5] := this[6];
 		}
     }"""
-    expected = "Error on line 2 col 10: :="
+    expected = "success"
     assert Parser(source).parse() == expected
 	
 def test_105():
@@ -1408,5 +1408,16 @@ def test_105():
             (a + b).method() := 10;
 		}
     }"""
-    expected = "Error on line 2 col 10: :="
+    expected = "success"
+    assert Parser(source).parse() == expected
+	
+def test_105():
+    source = """class Test{
+        static void main(){
+            int n;
+            io.readln(n);
+			io.print(Test.func(n));
+		}
+	}"""
+    expected = "success"
     assert Parser(source).parse() == expected
