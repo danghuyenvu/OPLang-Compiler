@@ -27,8 +27,8 @@ class ASTGeneration(OPLangVisitor):
     
 
     def visitClassdecl(self, ctx): # this returns an object of ClassDecl
-        superId = ctx.IDENTIFIERS(1) if (ctx.IDENTIFIERS(1)) else None
-        return ClassDecl(ctx.IDENTIFIERS(0), superId, self.visit(ctx.memberblock()))
+        superId = ctx.IDENTIFIERS(1).getText() if (ctx.IDENTIFIERS(1)) else None
+        return ClassDecl(ctx.IDENTIFIERS(0).getText(), superId, self.visit(ctx.memberblock()))
     
 
     def visitMemberblock(self, ctx): # this calls visit to memberlist
