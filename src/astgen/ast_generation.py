@@ -259,7 +259,7 @@ class ASTGeneration(OPLangVisitor):
 
 
     def visitVarspec(self, ctx):
-        return ctx.FINAL()
+        return ctx.FINAL() is not None
 
 
     def visitVarlist(self, ctx): #returns list of Variable objects
