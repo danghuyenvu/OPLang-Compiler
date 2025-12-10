@@ -127,7 +127,7 @@ class ASTGeneration(OPLangVisitor):
         
 
     def visitArraytype(self, ctx): # returns ArrayType object
-        return ArrayType(self.visit(ctx.elementtype()), ctx.INTLIT().getText())
+        return ArrayType(self.visit(ctx.elementtype()), int(ctx.INTLIT().getText()))
     
 
     def visitElementtype(self, ctx): #return PrimitiveType object
@@ -488,7 +488,7 @@ class ASTGeneration(OPLangVisitor):
         elif (ctx.STRINGLIT()):
             return StringLiteral(ctx.STRINGLIT().getText())
         else:
-            return BoolLiteral(True if ctx.TRUE() else False)
+            return BoolLiteral(True if ctx.TRUE() is not None else False)
 
 
     def visitArraylit(self, ctx):
