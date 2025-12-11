@@ -496,11 +496,11 @@ class ASTGeneration(OPLangVisitor):
 
 
     def visitLiterallist(self, ctx):
-        return [self.visit(ctx.anyliteral())] + self.visit(ctx.literallisttail()) if (ctx.literallisttail()) else [self.visit(ctx.anyliteral())]
+        return [self.visit(ctx.expression())] + self.visit(ctx.literallisttail()) if (ctx.literallisttail()) else [self.visit(ctx.anyliteral())]
     
 
     def visitLiterallisttail(self, ctx):
-        return [self.visit(ctx.anyliteral())] + self.visit(ctx.literallisttail()) if (ctx.literallisttail()) else []
+        return [self.visit(ctx.expression())] + self.visit(ctx.literallisttail()) if (ctx.literallisttail()) else []
     
 
     def visitAnyliteral(self, ctx):

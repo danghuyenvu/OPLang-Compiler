@@ -510,23 +510,11 @@ arraylit                                       //Array literal
     ;
 
 literallist
-    : anyliteral literallisttail
-    | anyliteral
+    : expression literallisttail
+    | expression
     ;
 
 literallisttail
-    : COMMA anyliteral literallisttail
+    : COMMA expression literallisttail
     |
-    ;
-
-anyliteral
-    : INTLIT
-    | STRINGLIT
-    | FLOATLIT
-    | boollit
-    ;
-
-boollit
-    : TRUE
-    | FALSE
     ;
