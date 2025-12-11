@@ -55,7 +55,9 @@ class StaticChecker(ASTVisitor):
         """
         Method for type compatible check
         """
-        if isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType):
+        if isinstance(left, ReferenceType) or isinstance(right, ReferenceType):
+            return self.compareType(left.referenced_type if isinstance(left, ReferenceType) else left, right.referenced_type if isinstance(right, ReferenceType) else right, environment=environment)
+        elif isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType):
             if left.type_name == "float":
                 if (coercible):
                     if right.type_name not in ["int", "float"]:
@@ -90,8 +92,6 @@ class StaticChecker(ASTVisitor):
                 return left.size == right.size
             else:
                 return False
-        elif isinstance(left, ReferenceType) and isinstance(right, ReferenceType):
-            return self.compareType(left.referenced_type, right.referenced_type, environment=environment)
         else:
             return False
 
@@ -103,7 +103,82 @@ class StaticChecker(ASTVisitor):
     def visit_program(self, node: "Program", o: Any = None):
         #double pass, o:{pass, local:list, entry:boolean}
         Op = 0 #0:get class struct, 1:validate and 
-        env = {} #env will be like: "name": (localenv:{}, supername)
+        env = {
+            "io" : ({
+                "readInt": {
+                    "type" : PrimitiveType("int"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : []
+                },
+                "writeInt": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("int")]
+                },
+                "writeIntLn": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("int")]
+                },
+                "readFloat": {
+                    "type" : PrimitiveType("float"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : []
+                },
+                "writeFloat": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("float")]
+                },
+                "writeFloatLn": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("float")]
+                },
+                "readBool": {
+                    "type" : PrimitiveType("boolean"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : []
+                },
+                "writeBool": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("boolean")]
+                },
+                "writeBoolLn": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("boolean")]
+                },
+                "readStr": {
+                    "type" : PrimitiveType("string"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : []
+                },
+                "writeStr": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("string")]
+                },
+                "writeStrLn": {
+                    "type" : PrimitiveType("void"),
+                    "is_static" : True,
+                    "is_final" : False,
+                    "params" : [PrimitiveType("string")]
+                }
+            }, None)
+        } #env will be like: "name": (localenv:{}, supername)
         entry = []
         [self.visit(x, (Op, env, entry)) for x in node.class_decls]
 
@@ -202,7 +277,6 @@ class StaticChecker(ASTVisitor):
             if not isinstance(node.init_value, NilLiteral) and node.init_value is not None:
                 env = {
                     "program" : o[1],
-                    "class" : o[2],
                     "name": o[4]
                 }
                 init_type, eval = self.visit(node.init_value, env)
@@ -257,7 +331,6 @@ class StaticChecker(ASTVisitor):
             classenv = o[1].get(o[2])[0]
             retType = classenv.get(node.name)["type"]
             env = {
-                "class" : classenv.copy(),
                 "program" : o[1], 
                 "type": retType,
                 "name": o[2]
@@ -303,14 +376,12 @@ class StaticChecker(ASTVisitor):
             paramlist = {}
             [self.visit(x, (o[0], o[1], o[2], paramlist)) for x in node.params]
 
-            classenv = o[1].get(o[2])[0]
             env = {
-                "class" : classenv.copy(),
                 "program" : o[1],
                 "name": o[2]
             }
 
-            self.visit(node.body, env)
+            self.visit(node.body, (env, paramlist))
 
     def visit_destructor_decl(self, node: "DestructorDecl", o: Any = None):
         if o[0] == 0:
@@ -335,7 +406,6 @@ class StaticChecker(ASTVisitor):
             #o : (Op=1, programenv, classname)
             classenv = o[1].get(o[2])[0]
             env = {
-                "class" : classenv.copy(),
                 "program" : o[1],
                 "name": o[2]
             }
@@ -464,9 +534,7 @@ class StaticChecker(ASTVisitor):
      
     def visit_if_statement(self, node: "IfStatement", o: Any = None):
         cond, _ = self.visit(node.condition, o)
-        if not isinstance(cond, PrimitiveType):
-            raise TypeMismatchInStatement(node)
-        if cond.type_name != "boolean":
+        if not self.compareType(cond, PrimitiveType("boolean")):
             raise TypeMismatchInStatement(node)
         
         env = {
@@ -493,25 +561,19 @@ class StaticChecker(ASTVisitor):
             iden = env["local"].get(node.variable)
             if iden is not None:
                 idType = iden["type"]
-                if not isinstance(idType, PrimitiveType) or idType.type_name != "int":
+                if not self.compareType(idType, PrimitiveType("int"), coercible=False):
                     raise TypeMismatchInStatement(node)
                 found = True
             else:
                 env = env.get("global")
         if not found:
-            iden = env["class"].get(node.variable)
-            if iden is not None:
-                idType = iden["type"]
-                if not isinstance(idType, PrimitiveType) or idType.type_name != "int":
-                    raise TypeMismatchInStatement(node)
-            else:
-                raise UndeclaredIdentifier(node.variable)
+            raise UndeclaredIdentifier(node.variable)
 
         exp1, _ = self.visit(node.start_expr, o)
-        if not isinstance(exp1, PrimitiveType) or exp1.type_name != "int":
+        if not self.compareType(PrimitiveType("int"), exp1):
             raise TypeMismatchInStatement(node)
         exp2, _ = self.visit(node.end_expr, o)
-        if not isinstance(exp2, PrimitiveType) or exp2.type_name != "int":
+        if not self.compareType(PrimitiveType("int"), exp2):
             raise TypeMismatchInStatement(node)
         
         stmt_env = {
@@ -576,6 +638,7 @@ class StaticChecker(ASTVisitor):
             else:
                 env = env.get("global")
         
+        raise UndeclaredIdentifier(node.name)
         env = env.get("class")
         if env.get(node.name) is None:
             raise UndeclaredIdentifier(node.name)
@@ -599,50 +662,38 @@ class StaticChecker(ASTVisitor):
         right, r_eval = self.visit(node.right, o)
 
         if node.operator in ["\\", "%"]:
-            if not (isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType)):
+            if not (self.compareType(left, PrimitiveType("int"), coercible=False, environment=env) and self.compareType(right, PrimitiveType("int"), environment=env, coercible=False)):
                 raise TypeMismatchInExpression(node)
             else:
-                if left.type_name != "int" or right.type_name != "int":
-                    raise TypeMismatchInExpression(node)
-                else:
-                    return PrimitiveType("int"), l_eval and r_eval
+                return PrimitiveType("int"), l_eval and r_eval
         elif node.operator in ["+", "-", "*", "/", ">", "<", ">=", "<="]:
-            if not (isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType)):
+            if not self.compareType(left, PrimitiveType("int")) or not self.compareType(right, PrimitiveType("int")):
                 raise TypeMismatchInExpression(node)
             else:
-                if left.type_name not in ["int", "float"] or right.type_name not in ["int", "float"]:
-                    raise TypeMismatchInExpression(node)
+                if node.operator in [">", "<", ">=", "<="]:
+                    return PrimitiveType("boolean"), l_eval and r_eval
+                if self.compareType(left, right, coercible=False):
+                    return left, l_eval and r_eval
                 else:
-                    if node.operator in [">", "<", ">=", "<="]:
-                        return PrimitiveType("boolean"), l_eval and r_eval
-                    if left.type_name == right.type_name:
-                        return PrimitiveType(left.type_name), l_eval and r_eval
-                    else:
-                        return PrimitiveType("float"), l_eval and r_eval
+                    return PrimitiveType("float"), l_eval and r_eval
         elif node.operator in ["==", "!="]:
-            if not (isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType)):
+            if not (self.compareType(left, PrimitiveType("int"), coercible=False) or self.compareType(left, PrimitiveType("boolean"))) or not (self.compareType(right, PrimitiveType("int"), coercible=False) or self.compareType(right, PrimitiveType("boolean"))):
                 raise TypeMismatchInExpression(node)
             else:
-                if left.type_name not in ["int", "boolean"] or right.type_name not in ["int", "boolean"] or right.type_name != left.type_name:
+                if not self.compareType(left, right):
                     raise TypeMismatchInExpression(node)
                 else:
                     return PrimitiveType("boolean"), l_eval and r_eval
         elif node.operator in ["&&", "||"]:
-            if not (isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType)):
+            if not (self.compareType(left, PrimitiveType("boolean")) and self.compareType(right, PrimitiveType("boolean"))):
                 raise TypeMismatchInExpression(node)
             else:
-                if left.type_name != "boolean" or right.type_name != "boolean":
-                    raise TypeMismatchInExpression(node)
-                else:
-                    return PrimitiveType("boolean"), l_eval and r_eval
+                return PrimitiveType("boolean"), l_eval and r_eval
         elif node.operator == "^":
-            if not (isinstance(left, PrimitiveType) and isinstance(right, PrimitiveType)):
+            if not (self.compareType(left, PrimitiveType("string")) and self.compareType(right, PrimitiveType("string"))):
                 raise TypeMismatchInExpression(node)
             else:
-                if left.type_name == "string" and right.type_name == "string":
-                    return PrimitiveType("string"), l_eval and r_eval
-                else:
-                    raise TypeMismatchInExpression(node)
+                return PrimitiveType("string"), l_eval and r_eval
 
      
     def visit_unary_op(self, node: "UnaryOp", o: Any = None):
@@ -651,19 +702,15 @@ class StaticChecker(ASTVisitor):
         operand, eval = self.visit(node.operand, o)
 
         if node.operator == "!":
-            if isinstance(operand, PrimitiveType):
-                if operand.type_name == "boolean":
-                    return PrimitiveType("boolean"), eval
-                else:
-                    raise TypeMismatchInExpression(node)
+            if self.compareType(operand, PrimitiveType("boolean")):
+                return PrimitiveType("boolean"), eval
             else:
                 raise TypeMismatchInExpression(node)
         else:
-            if isinstance(operand, PrimitiveType):
-                if operand.type_name in ["int", "float"]:
-                    return PrimitiveType(operand.type_name), eval
-                else:
-                    raise TypeMismatchInExpression(node)
+            if self.compareType(operand, PrimitiveType("int")):
+                return PrimitiveType("int"), eval
+            elif self.compareType(operand, PrimitiveType("float")):
+                return PrimitiveType("float"), eval
             else:
                 raise TypeMismatchInExpression(node)
 
@@ -679,6 +726,8 @@ class StaticChecker(ASTVisitor):
             pType, isFinal = self.visit(node.primary, (env, 1))
 
         if pType is not None:
+            while isinstance(pType, ReferenceType):
+                pType = pType.referenced_type
             if not (isinstance(pType, ClassType) or isinstance(pType, ArrayType) or isinstance(pType, str)):
                 raise TypeMismatchInExpression(node)
 
@@ -720,6 +769,8 @@ class StaticChecker(ASTVisitor):
     def visit_method_call(self, node: "MethodCall", o: Any = None):
         primary = o[0]
         env = o[1]
+        while isinstance(primary, ReferenceType):
+            primary = primary.referenced_type
         if isinstance(primary, ArrayType):
             raise TypeMismatchInExpression(node)
         
@@ -761,7 +812,7 @@ class StaticChecker(ASTVisitor):
                 else:
                     argument = list(map(lambda x: x[0], [self.visit(it, o[1]) for it in node.args]))
                     params = ret.get("params")
-                    if all(self.compareType(x, y) for x, y in zip(params, argument, o[1])):
+                    if all(self.compareType(x, y, o[1]) for x, y in zip(params, argument)):
                         return ret.get("type"), False
                     else:
                         raise TypeMismatchInExpression(node)
@@ -772,6 +823,8 @@ class StaticChecker(ASTVisitor):
     def visit_member_access(self, node: "MemberAccess", o: Any = None):
         primary = o[0]
         env = o[1]
+        while isinstance(primary, ReferenceType):
+            primary = primary.referenced_type
         if isinstance(primary, ArrayType):
             raise TypeMismatchInExpression(node)
         while env.get("global") is not None:
@@ -814,13 +867,13 @@ class StaticChecker(ASTVisitor):
     def visit_array_access(self, node: "ArrayAccess", o: Any = None):
         primary = o[0]
         env = o[1]
+        while isinstance(primary, ReferenceType):
+            primary = primary.referenced_type
         if not isinstance(primary, ArrayType):
             raise TypeMismatchInExpression(node)
         else:
             index, _ = self.visit(node.index, env)
-            if not isinstance(index, PrimitiveType):
-                raise TypeMismatchInExpression(node)
-            if index.type_name != "int":
+            if not self.compareType(index, PrimitiveType("int")):
                 raise TypeMismatchInExpression(node)
             return primary.element_type, False
 
@@ -862,31 +915,20 @@ class StaticChecker(ASTVisitor):
                 else:
                     env = env.get("global")
             if not found:
-                iden = env["class"].get(node.name)
-                if iden is not None:
-                    return iden["type"], iden["is_final"]
+                iden = env["program"].get(node.name)
+                if iden is None:
+                    raise UndeclaredIdentifier(node.name)
                 else:
-                    iden = env["program"].get(node.name)
-                    if iden is None:
-                        raise UndeclaredIdentifier(node.name)
-                    else:
-                        return node.name, None
+                    return node.name, None
         else:
             env = o
-
-            found = False
             while env.get("local") is not None:
                 iden = env["local"].get(node.name)
                 if iden is not None:
                     return iden["type"], iden["is_final"]
                 else:
                     env = env.get("global")
-            if not found:
-                iden = env["class"].get(node.name)
-                if iden is not None:
-                    return iden["type"], iden["is_final"]
-                else:
-                    raise UndeclaredIdentifier(node.name)
+            raise UndeclaredIdentifier(node.name)
 
 
 
