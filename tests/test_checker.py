@@ -562,7 +562,7 @@ class Test {
 class Haha{
 }
 """
-    expected = "Static checking passed"
+    expected = "UndeclaredClass(Haha)"
     assert Checker(source).check_from_source() == expected
 
 def test_033():
@@ -649,7 +649,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalMemberAccess(ThisExpression(this))"
+    expected = "UndeclaredClass(jajaja)"
     assert Checker(source).check_from_source() == expected
 
 def test_036():
@@ -678,7 +678,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalMemberAccess(ThisExpression(this))"
+    expected = "UndeclaredClass(jajaja)"
     assert Checker(source).check_from_source() == expected
 
 def test_037():
@@ -707,7 +707,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalMemberAccess(ThisExpression(this))"
+    expected = "UndeclaredClass(jajaja)"
     assert Checker(source).check_from_source() == expected
 
 def test_038():
@@ -736,7 +736,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalMemberAccess(ThisExpression(this))"
+    expected = "UndeclaredClass(jajaja)"
     assert Checker(source).check_from_source() == expected
 
 def test_039():
@@ -1960,7 +1960,7 @@ class cat extends animal {
     }
 }
 """
-    expected = "No Entry Point"
+    expected = "UndeclaredAttribute(lims)"
     assert Checker(source).check_from_source() == expected
 
 def test_100():

@@ -185,8 +185,6 @@ class StaticChecker(ASTVisitor):
         if len(entry) < 1:
             raise NoEntryPoint()
         
-        Op = 1
-        [self.visit(x, (Op, env)) for x in node.class_decls]
 
 
     def visit_class_decl(self, node: "ClassDecl", o: Any = None): 
@@ -222,9 +220,6 @@ class StaticChecker(ASTVisitor):
                 else:
                     o[1][node.name] = (env, super_class)
 
-            
-            #pass 1 validate attribute init values, check method bodies
-        else:
             Op = 1
             [self.visit(x, (Op, o[1], node.name)) for x in node.members]
 
