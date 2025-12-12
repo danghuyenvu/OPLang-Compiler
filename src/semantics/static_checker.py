@@ -330,10 +330,12 @@ class StaticChecker(ASTVisitor):
 
             classenv = o[1].get(o[2])[0]
             retType = classenv.get(node.name)["type"]
+            is_static = classenv.get(node.name)["is_static"]
             env = {
                 "program" : o[1], 
                 "type": retType,
-                "name": o[2]
+                "name": o[2],
+                "is_static": is_static
             }
 
             self.visit(node.body, (env, paramlist))
@@ -939,6 +941,8 @@ class StaticChecker(ASTVisitor):
             env = env.get("global")
         
         class_name = env.get("name")
+        if env.get("is_static") == True:
+            raise IllegalMemberAccess(node)
         return ClassType(class_name), False
 
 

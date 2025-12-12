@@ -622,7 +622,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalMemberAccess(PostfixExpression(ThisExpression(this).b))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_035():
@@ -649,7 +649,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "Static checking passed"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_036():
@@ -678,7 +678,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "TypeMismatchInStatement(VariableDecl(ArrayType(PrimitiveType(float)[5]), [Variable(e = PostfixExpression(Identifier(jajaja).d))]))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_037():
@@ -707,7 +707,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "IllegalArrayLiteral(ArrayLiteral({IntLiteral(1), IntLiteral(2), IntLiteral(3), FloatLiteral(5.5), IntLiteral(6)}))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_038():
@@ -736,7 +736,7 @@ class jejjee extends jajaja{
     }
 }
 """
-    expected = "TypeMismatchInStatement(VariableDecl(ArrayType(PrimitiveType(float)[5]), [Variable(e = ArrayLiteral({IntLiteral(1), IntLiteral(2), IntLiteral(3), IntLiteral(5), IntLiteral(6)}))]))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_039():
@@ -937,7 +937,7 @@ class Test {
     }
 }
 """
-    expected = "UndeclaredMethod(readInt)"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_053():
@@ -949,7 +949,7 @@ class Test {
     }
 }
 """
-    expected = "IllegalMemberAccess(PostfixExpression(ThisExpression(this).main()))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_054():
@@ -1086,7 +1086,7 @@ class Test {
     }
 }
 """
-    expected = "IllegalMemberAccess(PostfixExpression(ThisExpression(this).a))"
+    expected = "IllegalMemberAccess(ThisExpression(this))"
     assert Checker(source).check_from_source() == expected
 
 def test_062():
